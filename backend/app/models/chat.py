@@ -1,3 +1,4 @@
+import json
 import uuid
 from datetime import datetime, timezone
 
@@ -28,9 +29,26 @@ class ChatMessage(Base):
     role: Mapped[str] = mapped_column(String(16), nullable=False)  # "user" | "assistant"
     content: Mapped[str] = mapped_column(Text, nullable=False)
     sources_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    trace_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
+
+    @property
+    def sources(self) -> list[dict] | None:
+        return json.loads(self.sources_json) if self.sources_json else None
+
+    @property
+    def system_prompt(self) -> str | None:
+        if not self.trace_json:
+            return None
+        return json.loads(self.trace_json).get("system_prompt")
+
+    @property
+    def timing(self) -> dict | None:
+        if not self.trace_json:
+            return None
+        return json.loads(self.trace_json).get("timing")
 
 
 class AgentRun(Base):

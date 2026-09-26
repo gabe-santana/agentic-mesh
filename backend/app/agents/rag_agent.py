@@ -6,6 +6,7 @@ Deliberately a plain async class rather than a graph/DAG framework
 without changing the API route.
 """
 
+import time
 from collections.abc import AsyncGenerator
 
 from app.services import rag
@@ -31,6 +32,7 @@ class RAGChatAgent:
         prompt: str,
         enable_rag: bool,
     ) -> AsyncGenerator[dict, None]:
+        start = time.perf_counter()
         sources: list[dict] = []
         system_content = SYSTEM_PROMPT
 
@@ -42,12 +44,24 @@ class RAGChatAgent:
                     "\n\n--- Retrieved context ---\n" + context + "\n--- End context ---"
                 )
 
+        retrieval_ms = int((time.perf_counter() - start) * 1000)
         turns = [ChatTurn("system", system_content), *history, ChatTurn("user", prompt)]
 
+        generation_start = time.perf_counter()
         async for delta in stream_chat(turns):
             yield {"type": "token", "content": delta}
+        generation_ms = int((time.perf_counter() - generation_start) * 1000)
 
-        yield {"type": "done", "sources": sources}
+        yield {
+            "type": "done",
+            "sources": sources,
+            "system_prompt": system_content,
+            "timing": {
+                "retrieval_ms": retrieval_ms,
+                "generation_ms": generation_ms,
+                "total_ms": retrieval_ms + generation_ms,
+            },
+        }
 
 
 class AgentRegistry:

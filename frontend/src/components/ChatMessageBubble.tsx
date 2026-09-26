@@ -1,16 +1,26 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-import type { RetrievedSource } from "@/types";
+import TracePanel from "@/components/TracePanel";
+import type { RetrievedSource, TraceTiming } from "@/types";
 
 interface Props {
   role: "user" | "assistant";
   content: string;
-  sources?: RetrievedSource[];
+  sources?: RetrievedSource[] | null;
+  systemPrompt?: string | null;
+  timing?: TraceTiming | null;
   isStreaming?: boolean;
 }
 
-export default function ChatMessageBubble({ role, content, sources, isStreaming }: Props) {
+export default function ChatMessageBubble({
+  role,
+  content,
+  sources,
+  systemPrompt,
+  timing,
+  isStreaming,
+}: Props) {
   const isUser = role === "user";
 
   return (
@@ -40,17 +50,8 @@ export default function ChatMessageBubble({ role, content, sources, isStreaming 
         )}
         {isStreaming && <span className="animate-pulse">▍</span>}
 
-        {sources && sources.length > 0 && (
-          <div className="mt-3 border-t border-slate-200 pt-2">
-            <p className="mb-1 text-xs font-medium text-slate-500">Sources</p>
-            <ul className="space-y-1">
-              {sources.map((s, i) => (
-                <li key={`${s.document_id}-${s.chunk_index}`} className="text-xs text-slate-500">
-                  [{i + 1}] {s.filename ?? "unknown"} · score {s.score.toFixed(2)}
-                </li>
-              ))}
-            </ul>
-          </div>
+        {!isStreaming && !isUser && (
+          <TracePanel sources={sources} systemPrompt={systemPrompt} timing={timing} />
         )}
       </div>
     </div>

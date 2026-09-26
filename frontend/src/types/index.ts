@@ -10,11 +10,20 @@ export interface ChatSession {
   created_at: string;
 }
 
+export interface TraceTiming {
+  retrieval_ms: number;
+  generation_ms: number;
+  total_ms: number;
+}
+
 export interface ChatMessage {
   id: string;
   role: "user" | "assistant";
   content: string;
   created_at: string;
+  sources?: RetrievedSource[] | null;
+  system_prompt?: string | null;
+  timing?: TraceTiming | null;
 }
 
 export interface DocumentItem {
@@ -38,5 +47,5 @@ export interface RetrievedSource {
 export type StreamEvent =
   | { type: "session"; session_id: string }
   | { type: "token"; content: string }
-  | { type: "done"; sources: RetrievedSource[] }
+  | { type: "done"; sources: RetrievedSource[]; system_prompt?: string; timing?: TraceTiming }
   | { type: "error"; message: string };

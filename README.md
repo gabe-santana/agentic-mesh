@@ -1,16 +1,72 @@
-# AgenticMesh - Distributed Enterprise AI Agent & RAG Platform
+<div align="center">
+
+# 🕸️ AgenticMesh
+
+### Distributed Enterprise AI Agent & RAG Platform
+
+**Chat com streaming em tempo real, RAG sobre seus próprios documentos e um painel de observabilidade que mostra exatamente o que a IA "viu" antes de responder.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.11+-blue)](https://www.python.org/)
-[![Next.js](https://img.shields.io/badge/Next.js-14+-black)](https://nextjs.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688)](https://fastapi.tiangolo.com/)
-[![Docker](https://img.shields.io/badge/Docker-Supported-blue)](https://www.docker.com/)
+[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-14-black?logo=next.js&logoColor=white)](https://nextjs.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![Qdrant](https://img.shields.io/badge/Qdrant-vector%20search-DC244C)](https://qdrant.tech/)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+[![Azure AI Foundry](https://img.shields.io/badge/Azure%20AI%20Foundry-LLM%20provider-0078D4?logo=microsoftazure&logoColor=white)](https://azure.microsoft.com/products/ai-foundry)
 
-**AgenticMesh** é um ecossistema distribuído de alta resiliência projetado para orquestrar Agentes de IA autônomos e pipelines de RAG (Retrieval-Augmented Generation) em escala enterprise.
+[**▶ Assista à demo abaixo**](#-demo) · [Funcionalidades](#-funcionalidades) · [Arquitetura](#-arquitetura-do-sistema) · [Como rodar](#-como-executar-localmente)
 
-A plataforma conta com uma interface moderna em **Next.js** e um backend totalmente construído em **Python (FastAPI)**, usando o **Azure AI Foundry** (endpoint compatível com OpenAI, via SDK `openai`) como provedor de modelos de chat (Responses API) e embeddings, com controle de latência e observabilidade básica de execuções.
+</div>
 
-> **Status:** implementação inicial funcional (MVP) — ver [Escopo desta versão](#-escopo-desta-versão-mvp) abaixo para o que já funciona de ponta a ponta vs. o que é visão futura.
+---
+
+## 🎬 Demo
+
+<div align="center">
+
+[![Assista à demo do AgenticMesh](docs/res/video-thumbnail.jpg)](docs/res/video.mp4)
+
+*Clique na imagem para assistir ao vídeo de apresentação (upload/ingestão de PDF → chat com RAG em streaming → painel de trace do pipeline).*
+
+</div>
+
+---
+
+**AgenticMesh** é um ecossistema projetado para orquestrar Agentes de IA autônomos e pipelines de RAG (Retrieval-Augmented Generation) em escala enterprise. A plataforma conta com uma interface moderna em **Next.js** e um backend totalmente construído em **Python (FastAPI)**, usando o **Azure AI Foundry** (endpoint compatível com OpenAI, via SDK `openai`) como provedor de modelos de chat (Responses API) e embeddings.
+
+> **Status:** implementação funcional (MVP) de ponta a ponta — ver [Escopo desta versão](#escopo-desta-versão-mvp) para o que já roda vs. o que é visão futura.
+
+## ✨ Funcionalidades
+
+|  |  |
+|---|---|
+| 💬 **Chat com streaming (SSE)** | Respostas token a token, renderizadas em **Markdown** (tabelas, listas, código) em tempo real. |
+| 📚 **RAG sobre seus documentos** | Upload de `.txt` / `.md` / `.pdf` → chunking → embeddings → Qdrant. O agente busca e cita as fontes `[n]` na resposta. |
+| 🔍 **Painel de "Pipeline Trace"** | Por trás de cada resposta: tempo de retrieval vs. geração, os chunks recuperados com score de similaridade, e o **prompt de sistema exato** enviado ao modelo. Nada de caixa-preta. |
+| 🔐 **Auth JWT** | Registro/login simples, sessões de chat isoladas por usuário. |
+| 🗑️ **Gestão completa** | Apagar chats e documentos (incluindo seus vetores no Qdrant) direto da UI. |
+| 🐳 **100% dockerizado** | `docker compose up` sobe os 6 serviços — nenhuma dependência local além do Docker. |
+
+## 📸 Screenshots
+
+<div align="center">
+<table>
+<tr>
+<td width="50%">
+
+**Chat com Markdown + Pipeline Trace**
+<img src="docs/res/screenshot-chat.png" alt="Chat com resposta em markdown e painel de trace do pipeline" width="100%">
+
+</td>
+<td width="50%">
+
+**Gestão de Documentos**
+<img src="docs/res/screenshot-documents.png" alt="Página de documentos com status de processamento" width="100%">
+
+</td>
+</tr>
+</table>
+</div>
 
 ---
 
@@ -32,27 +88,18 @@ graph TD
     B -->|Chat completion - streaming| F
 ```
 
----
+### Principais Módulos
 
-## 🚀 Principais Módulos e Funcionalidades
-
-### 1. Frontend Web App (`frontend/`)
-* Next.js 14 (App Router, TypeScript, Tailwind CSS): login/registro, chat com streaming (SSE) e toggle de RAG, upload e listagem de documentos com status de processamento.
-
-### 2. API (`backend/app/api`)
-* FastAPI assíncrona: autenticação JWT, upload de documentos, endpoints de chat/agent (streaming e histórico).
-
-### 3. RAG & Vector Processing Worker (`backend/app/workers`)
-* Celery worker: extração de texto (txt/md/pdf), chunking, geração de embeddings via Azure AI Foundry e upsert no Qdrant.
-
-### 4. Agent Core Engine (`backend/app/agents`)
-* `RAGChatAgent`: agente único de retrieval-augmented chat (busca no Qdrant + geração via Azure AI Foundry, streaming token a token). Estruturado para permitir a introdução futura de um framework de orquestração multi-agente (LangGraph/Semantic Kernel) sem reescrita.
-
----
+| Módulo | Descrição |
+|---|---|
+| **Frontend** (`frontend/`) | Next.js 14 (App Router, TypeScript, Tailwind): login/registro, chat com streaming e toggle de RAG, upload/listagem de documentos, painel de trace. |
+| **API** (`backend/app/api`) | FastAPI assíncrona: autenticação JWT, upload de documentos, endpoints de chat/agent (streaming e histórico), delete de chats/documentos. |
+| **Worker** (`backend/app/workers`) | Celery: extração de texto (txt/md/pdf), chunking, embeddings via Azure AI Foundry, upsert no Qdrant — com engine de DB isolada por task (evita corrupção de pool entre execuções). |
+| **Agent Core** (`backend/app/agents`) | `RAGChatAgent`: retrieval no Qdrant + geração via Azure AI Foundry, streaming token a token, com timing e prompt completo expostos para o painel de trace. |
 
 ## 🛠️ Tech Stack
 
-* **Frontend:** Next.js 14 (React 18, TypeScript, Tailwind CSS)
+* **Frontend:** Next.js 14 (React 18, TypeScript, Tailwind CSS, `react-markdown`)
 * **Backend Runtime:** Python 3.11+
 * **Web Framework:** FastAPI + Uvicorn
 * **AI:** Azure AI Foundry — endpoint compatível com OpenAI (chat via Responses API + embeddings via SDK `openai`)
@@ -66,7 +113,7 @@ graph TD
 Simplificações deliberadas em relação à visão de longo prazo do projeto:
 * Orquestração de agente é uma classe Python simples (`RAGChatAgent`), não LangGraph/Semantic Kernel.
 * Sem RabbitMQ — Redis cobre broker do Celery e cache.
-* Sem Alembic — tabelas criadas via `SQLAlchemy.metadata.create_all()` no boot do backend.
+* Sem Alembic — tabelas criadas via `SQLAlchemy.metadata.create_all()` no boot do backend (com auto-patch de colunas novas em bancos já existentes).
 * Sem Kubernetes/Terraform — apenas Docker Compose.
 
 ---
@@ -75,30 +122,30 @@ Simplificações deliberadas em relação à visão de longo prazo do projeto:
 
 ```text
 agentic-mesh/
-├── docs/                       # Diagramas e documentação de arquitetura (futuro)
+├── docs/res/                    # Vídeo de demo e screenshots deste README
 ├── docker/
-│   └── docker-compose.yml      # postgres, redis, qdrant, backend, worker, frontend
-├── frontend/                   # App Next.js (chat / documentos / auth)
+│   └── docker-compose.yml       # postgres, redis, qdrant, backend, worker, frontend
+├── frontend/                    # App Next.js (chat / documentos / auth)
 │   ├── src/
-│   │   ├── app/                # App Router (login, chat, documents)
-│   │   ├── components/         # Componentes React
-│   │   ├── services/           # Cliente API (fetch + parser SSE manual)
+│   │   ├── app/                 # App Router (login, chat, documents)
+│   │   ├── components/          # ChatMessageBubble, TracePanel, DocumentList...
+│   │   ├── services/            # Cliente API (fetch + parser SSE manual)
 │   │   └── types/
 │   ├── package.json
 │   └── tsconfig.json
-├── backend/                    # Backend Python (FastAPI + Celery)
+├── backend/                     # Backend Python (FastAPI + Celery)
 │   ├── app/
-│   │   ├── api/v1/routes/      # auth, documents, agent, health
-│   │   ├── core/                # config, security (JWT), db (SQLAlchemy async)
-│   │   ├── models/              # User, Document, ChatSession, ChatMessage, AgentRun
-│   │   ├── schemas/             # Pydantic request/response models
-│   │   ├── services/            # azure_ai.py, vector_store.py (Qdrant), rag.py
-│   │   ├── agents/              # RAGChatAgent
-│   │   ├── workers/             # Celery app + ingest_document_task
+│   │   ├── api/v1/routes/       # auth, documents, agent, health
+│   │   ├── core/                 # config, security (JWT), db (SQLAlchemy async)
+│   │   ├── models/               # User, Document, ChatSession, ChatMessage, AgentRun
+│   │   ├── schemas/              # Pydantic request/response models
+│   │   ├── services/             # azure_ai.py, vector_store.py (Qdrant), rag.py
+│   │   ├── agents/               # RAGChatAgent
+│   │   ├── workers/              # Celery app + ingest_document_task
 │   │   └── main.py
 │   └── requirements.txt
-├── tests/backend/               # pytest suite
-├── .env.example                 # copie para .env e preencha as credenciais
+├── tests/backend/                # pytest suite
+├── .env.example                  # copie para .env e preencha as credenciais
 ├── README.md
 └── LICENSE
 ```
@@ -191,7 +238,7 @@ Content-Type: application/json
   "agent_type": "rag_chat"
 }
 ```
-Resposta em `text/event-stream`: eventos `{"type":"token","content":"..."}` token a token, seguidos de `{"type":"done","sources":[...]}`.
+Resposta em `text/event-stream`: eventos `{"type":"token","content":"..."}` token a token, seguidos de `{"type":"done","sources":[...],"system_prompt":"...","timing":{...}}` — os mesmos dados que alimentam o painel de trace no frontend.
 
 ---
 
@@ -209,4 +256,10 @@ Contribuições são super bem-vindas! Sinta-se à vontade para abrir **Issues**
 
 ## 📜 Licença
 
-Distribuído sob a licença MIT. Veja `LICENSE` para mais informações.
+Distribuído sob a licença MIT. Veja [`LICENSE`](LICENSE) para mais informações.
+
+<div align="center">
+
+Feito com 🕸️ por Gabriel Santana
+
+</div>

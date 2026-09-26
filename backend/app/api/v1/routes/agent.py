@@ -54,6 +54,8 @@ async def stream_agent(
     async def event_generator() -> AsyncGenerator[dict, None]:
         full_text = ""
         sources: list[dict] = []
+        system_prompt: str | None = None
+        timing: dict | None = None
         run_status = "success"
         error_message: str | None = None
         start = time.perf_counter()
@@ -63,6 +65,8 @@ async def stream_agent(
             async for event in agent.stream(history_turns, payload.prompt, payload.enable_rag):
                 if event["type"] == "done":
                     sources = event["sources"]
+                    system_prompt = event.get("system_prompt")
+                    timing = event.get("timing")
                 else:
                     full_text += event.get("content", "")
                 yield {"event": "message", "data": json.dumps(event)}
@@ -79,6 +83,11 @@ async def stream_agent(
                         role="assistant",
                         content=full_text,
                         sources_json=json.dumps(sources) if sources else None,
+                        trace_json=(
+                            json.dumps({"system_prompt": system_prompt, "timing": timing})
+                            if system_prompt
+                            else None
+                        ),
                     )
                 )
             db.add(
@@ -88,7 +97,7 @@ async def stream_agent(
                     agent_type=payload.agent_type,
                     prompt=payload.prompt,
                     status=run_status,
-                    latency_ms=latency_ms,
+                    latency_ms=(timing or {}).get("total_ms", latency_ms),
                     retrieved_chunks=len(sources),
                     error_message=error_message,
                 )

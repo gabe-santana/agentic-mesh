@@ -6,13 +6,15 @@ import { useRouter } from "next/navigation";
 import ChatInput from "@/components/ChatInput";
 import ChatMessageBubble from "@/components/ChatMessageBubble";
 import { deleteSession, getToken, listMessages, listSessions, streamAgent } from "@/services/api";
-import type { ChatSession, RetrievedSource } from "@/types";
+import type { ChatSession, RetrievedSource, TraceTiming } from "@/types";
 
 interface DisplayMessage {
   id: string;
   role: "user" | "assistant";
   content: string;
-  sources?: RetrievedSource[];
+  sources?: RetrievedSource[] | null;
+  systemPrompt?: string | null;
+  timing?: TraceTiming | null;
   streaming?: boolean;
 }
 
@@ -51,7 +53,16 @@ export default function ChatPage() {
     setError(null);
     try {
       const history = await listMessages(sessionId);
-      setMessages(history.map((m) => ({ id: m.id, role: m.role, content: m.content })));
+      setMessages(
+        history.map((m) => ({
+          id: m.id,
+          role: m.role,
+          content: m.content,
+          sources: m.sources,
+          systemPrompt: m.system_prompt,
+          timing: m.timing,
+        }))
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load session");
     }
@@ -108,7 +119,13 @@ export default function ChatPage() {
             const next = [...prev];
             const last = next[next.length - 1];
             if (last?.role === "assistant") {
-              next[next.length - 1] = { ...last, sources: event.sources, streaming: false };
+              next[next.length - 1] = {
+                ...last,
+                sources: event.sources,
+                systemPrompt: event.system_prompt,
+                timing: event.timing,
+                streaming: false,
+              };
             }
             return next;
           });
@@ -184,6 +201,8 @@ export default function ChatPage() {
               role={m.role}
               content={m.content}
               sources={m.sources}
+              systemPrompt={m.systemPrompt}
+              timing={m.timing}
               isStreaming={m.streaming}
             />
           ))}
