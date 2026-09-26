@@ -24,9 +24,9 @@
 
 <div align="center">
 
-[![Assista à demo do AgenticMesh](docs/res/video-thumbnail.jpg)](docs/res/video.mp4)
+![Demo do AgenticMesh: chat com RAG em streaming e painel de trace do pipeline](docs/res/demo.gif)
 
-*Clique na imagem para assistir ao vídeo de apresentação (upload/ingestão de PDF → chat com RAG em streaming → painel de trace do pipeline).*
+**[▶ Assistir ao vídeo completo](docs/res/video.mp4)** — upload/ingestão de PDF → chat com RAG em streaming → painel de trace do pipeline.
 
 </div>
 
